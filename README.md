@@ -30,7 +30,8 @@ git clone https://github.com/lingeniare/MTProxy.git && cd MTProxy && sudo bash i
 | Механизм | Реализация |
 |----------|------------|
 | Изоляция привилегий | Выделенный системный пользователь `mtproxy` |
-| Защита секретов | Хранилище `/etc/mtproxy/secret` с правами доступа `0600` |
+| Защита секретов | Хранилище `/etc/mtproxy/secret` и `/etc/mtproxy/mtproxy.env` с правами `0600` (секрет не пишется в unit-файл) |
+| Жёсткие права на код | Директория `/opt/MTProxy` принадлежит `root`, запись для группы/остальных отключена |
 | Обфускация протокола | Fake TLS с эмуляцией TLS SNI (`ee`-секрет) |
 | Противодействие DPI | Rate-limiting через `iptables hashlimit` |
 | Устойчивость | Сохранение правил через `netfilter-persistent` |
@@ -82,6 +83,10 @@ mtproto-proxy: common/pid.c:42: init_common_PID: Assertion `!(p & 0xffff0000)' f
 1. `systemctl cat MTProxy` — в `ExecStart` должен быть `unshare`, если workaround активирован.
 2. `journalctl -u MTProxy -f` — в логах MTProxy PID обычно видны как `[1]`, `[2]`.
 3. `systemctl status MTProxy` — `MainPID` будет у `unshare`, дочерние `mtproto-proxy` работают в той же cgroup.
+
+## Хранение секрета
+
+Секрет клиента хранится в `/etc/mtproxy/secret` и дублируется в `EnvironmentFile` (`/etc/mtproxy/mtproxy.env`, права `0600`) для передачи в `ExecStart` без записи значения в unit-файл.
 
 ## Администрирование
 
